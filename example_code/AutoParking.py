@@ -7,6 +7,7 @@ import Motor
 import numpy as np
 import time 
 
+
 MOTOR_RIGHT_PIN1 = 19
 MOTOR_RIGHT_PIN2 = 13
 MOTOR_RIGHT_PIN3 = 16
@@ -171,29 +172,14 @@ class AutoParking:
 
     # 経路の長さを計算する
     def calculate_path(self, distance_to_mark, turned_theta):
-        pass
+	 path_x = distance_to_mark * np.cos(turned_theta)
+    	 path_y = distance_to_mark * np.sin(turned_theta)
+    	 return path_x,path_y
+
 
     # 駐車マークまで移動
     def move_to_mark(self, path_x, path_y, turned_theta):
-        count=1
-		while(count!=0):
-			if(count==1):
-				turn_right(turned_theta)
-				if(can_move()==True):
-					count+=1
-
-				elif(count==2):
-					move_forward(path_x)
-					if(can_move()==True):
-						count+=1
-				elif(count==3):
-					turnleft(90)
-					if(can_move()==True):
-						count+=1            
-				elif(count==4):
-					move_forward(path_y)
-					count==0
-		return True
+        pass
 
     def end_process(self):
         GPIO.cleanup()
