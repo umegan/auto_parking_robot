@@ -133,15 +133,15 @@ class AutoParking:
         d = 10
 	count = 0
 	if 300 < coordinate_x < 340:
-		stop()
-		turned_theta = count*d
-		return True, turned_theta
+	    stop()
+	    turned_theta = count*d
+	    return True, turned_theta
 	elif coordinate_x < 300:
-		turnleft(d)
-		count++
+	    turnleft(d)
+	    count++
 	elif coordinate_x > 340:
-		turnright(d)
-		count++
+	    turnright(d)
+	    count++
         pass
 
     # 駐車マークまでの距離を取る
