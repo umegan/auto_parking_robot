@@ -162,19 +162,6 @@ class AutoParking:
         if distance_to_mark > 2 and distance_to_mark < 400:   #距離を求める(cm)
             return distance_to_mark
 
-    #連続して値を超音波センサの状態を読み取る
-    while True:
-        try:
-                           
-            distance_to_mark = read_distance()              
-            if distance_to_mark is not None:
-                print("distance=", int(distance_to_mark), "cm")  #距離をint型で表示
-            time.sleep(1)                          #1秒間待つ
-
-    except KeyboardInterrupt:       #Ctrl+Cキーが押された
-        GPIO.cleanup()              #GPIOをクリーンアップ
-        sys.exit()                  #プログラム終了
-
     # 経路の長さを計算する
     def calculate_path(self, distance_to_mark, turned_theta):
         pass
