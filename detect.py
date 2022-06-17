@@ -8,15 +8,18 @@ def main():
     prewCircle = None
     dist = lambda x1,y1,x2,y2: (x1-x2)**2+(y1-y2)**2 
     
+    # image = cv.imread('datas/IMG_0381.jpg')
+    
+
     while True:
         ret, frame = videoCapture.read()
         if not ret: break
 
         original = frame.copy()
-        hvsFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-        lower = np.array([0, 0, 0], dtype="uint8")
-        upper = np.array([328, 57, 93], dtype="uint8")
-        mask = cv.inRange(hvsFrame, lower, upper)
+        hsvimage = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+        lower = np.array([135, 0, 0], dtype="uint8")
+        upper = np.array([175, 255, 255], dtype="uint8")
+        mask = cv.inRange(hsvimage, lower, upper)
         # blurFrame = cv.GaussianBlur(grayFrame, (17, 17), 0)
 
 
