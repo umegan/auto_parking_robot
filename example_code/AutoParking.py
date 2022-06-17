@@ -142,7 +142,7 @@ class AutoParking:
 	elif coordinate_x > 340:
 	    turnright(d)
 	    count++
-        pass
+     
 
     # 駐車マークまでの距離を取る
     def get_distance(self):
