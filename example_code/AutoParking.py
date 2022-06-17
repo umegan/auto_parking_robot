@@ -5,6 +5,7 @@ import threading
 import sys
 import Motor
 import numpy as np
+import time 
 
 MOTOR_RIGHT_PIN1 = 19
 MOTOR_RIGHT_PIN2 = 13
@@ -23,6 +24,12 @@ PI = 3.1415927
 WHEEL_R = 12.25
 ROBOT_R = 41
 SPEED = 0.005
+
+Trig = 27                           
+Echo = 18  
+GPIO.setmode(GPIO.BCM)              
+GPIO.setup(Trig, GPIO.OUT)          
+GPIO.setup(Echo, GPIO.IN)
 
 class AutoParking:
     def __init__(self):
