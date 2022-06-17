@@ -5,6 +5,8 @@ import threading
 import sys
 import Motor
 import numpy as np
+import time 
+
 
 MOTOR_RIGHT_PIN1 = 19
 MOTOR_RIGHT_PIN2 = 13
@@ -23,6 +25,12 @@ PI = 3.1415927
 WHEEL_R = 12.25
 ROBOT_R = 41
 SPEED = 0.005
+
+Trig = 27                           
+Echo = 18  
+GPIO.setmode(GPIO.BCM)              
+GPIO.setup(Trig, GPIO.OUT)          
+GPIO.setup(Echo, GPIO.IN)
 
 class AutoParking:
     def __init__(self):
@@ -92,6 +100,9 @@ class AutoParking:
             return True
         else:
             return False
+        
+    def stop(self):
+        pass
 
     # 駐車マークを検出
     def mark_detection(self, image):
@@ -133,14 +144,14 @@ class AutoParking:
         d = 10
         count = 0
         if 300 < coordinate_x < 340:
-            stop()
+            self.stop()
             turned_theta = count*d
             return True, turned_theta
         elif coordinate_x < 300:
-            turn_left(d)
+            self.turn_left(d)
             count += 1
         elif coordinate_x > 340:
-            turn_right(d)
+            self.turn_right(d)
             count +=1
      
 
@@ -164,11 +175,32 @@ class AutoParking:
 
     # 経路の長さを計算する
     def calculate_path(self, distance_to_mark, turned_theta):
-        pass
+        path_x = distance_to_mark * np.cos(turned_theta)
+        path_y = distance_to_mark * np.sin(turned_theta)
+        return path_x, path_y
+
 
     # 駐車マークまで移動
     def move_to_mark(self, path_x, path_y, turned_theta):
-        pass
+        count=1
+        while(count!=0):
+            if(count==1):
+                self.turn_right(turned_theta)    
+            if(self.can_move()==True):
+                count+=1
+
+            elif(count==2):
+                self.move_forward(path_x)
+            if(self.can_move()==True):
+                count+=1
+            elif(count==3):
+                self.turnleft(90)
+            if(self.can_move()==True):
+                count+=1            
+            elif(count==4):
+                self.move_forward(path_y)
+                count==0
+        return True
 
     def end_process(self):
         GPIO.cleanup()
