@@ -4,6 +4,7 @@ import RPi.GPIO as GPIO
 import threading
 import sys
 import Motor
+import numpy as np
 
 MOTOR_RIGHT_PIN1 = 19
 MOTOR_RIGHT_PIN2 = 13
@@ -94,10 +95,53 @@ class AutoParking:
 
     # 駐車マークを検出
     def mark_detection(self, image):
-        pass
+        """
+        input: image
+
+        ouput: circle x direction from input image
+        """
+    
+    # Check if image is loaded fine
+        hsvimage = cv2.cvtColor(src, cv.COLOR_BGR2HSV)
+        lower = np.array([135, 0, 0], dtype="uint8")
+        upper = np.array([175, 255, 255], dtype="uint8")
+        mask = cv2.inRange(hsvimage, lower, upper)
+        
+        
+        rows = mask.shape[0]
+        circles = cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1, rows /5,
+                                param1= 100, param2=38,
+                                minRadius=50, maxRadius=0)
+        
+        
+        if circles is not None:
+            circles = np.uint16(np.around(circles))
+            # for i in circles[0, :]:
+            #     center = (i[0], i[1])
+                # circle center
+                # cv.circle(src, center, 4, (0, 100, 100), 3)
+                # cv.putText(src, f"x= {str(i[0])}",center, cv.FONT_HERSHEY_PLAIN, 4, (0, 100, 100), 5, cv.LINE_AA)
+                # circle outline
+                # radius = i[2]
+                # cv.circle(src, center, radius, (255, 0, 255), 3)
+            # output: x direction
+        return circles[0][0][0]
+
 
     # 駐車マークに真っ直ぐ向いていく
     def face_to_mark(self, coordinate_x):
+        d = 10
+	count = 0
+	if 300 < coordinate_x < 340:
+		stop()
+		turned_theta = count*d
+		return True, turned_theta
+	elif coordinate_x < 300:
+		turnleft(d)
+		count++
+	elif coordinate_x > 340:
+		turnright(d)
+		count++
         pass
 
     # 駐車マークまでの距離を取る
