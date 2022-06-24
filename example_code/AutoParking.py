@@ -1,3 +1,5 @@
+from re import X
+from turtle import distance
 import cv2
 from time import sleep
 import RPi.GPIO as GPIO
@@ -5,7 +7,7 @@ import threading
 import sys
 import Motor
 import numpy as np
-import time 
+import time, math
 
 
 MOTOR_RIGHT_PIN1 = 19
@@ -33,7 +35,11 @@ GPIO.setup(Trig, GPIO.OUT)
 GPIO.setup(Echo, GPIO.IN)
 
 class AutoParking:
+   
+
     def __init__(self):
+        self.count_left = 0
+        self.count_right = 0
         print('Init')
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(ECHO_PIN, GPIO.IN)
@@ -102,7 +108,14 @@ class AutoParking:
             return False
         
     def stop(self):
-        pass
+        result = 0
+        self.thread_l = threading.Thread(target=self._motor_left.Step_CCW, args=(result, SPEED))
+        self.thread_l.setDaemon(False)
+        self.thread_r = threading.Thread(target=self._motor_right.Step_CW, args=(result, SPEED))
+        self.thread_r.setDaemon(False)
+        self.thread_l.start()
+        self.thread_r.start()
+
 
     # 駐車マークを検出
     def mark_detection(self, image):
@@ -113,57 +126,61 @@ class AutoParking:
         """
     
     # Check if image is loaded fine
-        hsvimage = cv2.cvtColor(src, cv.COLOR_BGR2HSV)
-        lower = np.array([135, 0, 0], dtype="uint8")
-        upper = np.array([175, 255, 255], dtype="uint8")
+      
+        hsvimage = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        lower = np.array([150, 10, 10], dtype="uint8")
+        upper = np.array([180, 255, 255], dtype="uint8")
         mask = cv2.inRange(hsvimage, lower, upper)
-        
-        
+        img1 = image.copy()
+        img1[mask==0] = [0, 0, 0]
+        hsv2rgb = cv2.cvtColor(img1, cv2.COLOR_HSV2RGB)
+        gray = cv2.cvtColor(hsv2rgb, cv2.COLOR_RGB2GRAY)
+
+        gray = cv2.medianBlur(gray, 5)
         rows = mask.shape[0]
-        circles = cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1, rows /5,
-                                param1= 100, param2=38,
-                                minRadius=50, maxRadius=0)
+        circles = cv2.HoughCircles(gray, cv2.HOUGH_GRADIENT, 1, rows,
+                                   param1= 100, param2=19,
+                                   minRadius=60, maxRadius=0)
         
-        
+
         if circles is not None:
             circles = np.uint16(np.around(circles))
-            # for i in circles[0, :]:
-            #     center = (i[0], i[1])
-                # circle center
-                # cv.circle(src, center, 4, (0, 100, 100), 3)
-                # cv.putText(src, f"x= {str(i[0])}",center, cv.FONT_HERSHEY_PLAIN, 4, (0, 100, 100), 5, cv.LINE_AA)
-                # circle outline
-                # radius = i[2]
-                # cv.circle(src, center, radius, (255, 0, 255), 3)
-            # output: x direction
-        return circles[0][0][0]
+
+        
+            return circles[0][0][0]
+        else:
+            pass
+       
 
 
     # 駐車マークに真っ直ぐ向いていく
     def face_to_mark(self, coordinate_x):
-        d = 10
-        count = 0
-        if 300 < coordinate_x < 340:
+        d = 1
+        
+        if 310 < coordinate_x < 330:
+            print("stop")
             self.stop()
-            turned_theta = count*d
+            turned_theta = abs(self.count_left*d - self.count_right*d)
             return True, turned_theta
-        elif coordinate_x < 300:
+        elif coordinate_x < 310:
+            print("turn_left")
             self.turn_left(d)
-            count += 1
-        elif coordinate_x > 340:
+            self.count_left += 1
+        elif coordinate_x > 330:
+            print("turn_right")
             self.turn_right(d)
-            count +=1
+            self.count_right +=1
      
 
     # 駐車マークまでの距離を取る
     def get_distance(self):
-        GPIO.output(Trig, GPIO.HIGH)            #GPIO27の出力をHigh(3.3V)にする
+        GPIO.output(TRIG_PIN, GPIO.HIGH)            #GPIO27の出力をHigh(3.3V)にする
         time.sleep(0.00001)                     #10μ秒間待つ
-        GPIO.output(Trig, GPIO.LOW)             #GPIO27の出力をLow(0V)にする
+        GPIO.output(TRIG_PIN, GPIO.LOW)             #GPIO27の出力をLow(0V)にする
 
-        while GPIO.input(Echo) == GPIO.LOW:     #GPIO18がLowの時間
+        while GPIO.input(ECHO_PIN) == GPIO.LOW:     #GPIO18がLowの時間
             sig_off = time.time()
-        while GPIO.input(Echo) == GPIO.HIGH:    #GPIO18がHighの時間
+        while GPIO.input(ECHO_PIN) == GPIO.HIGH:    #GPIO18がHighの時間
             sig_on = time.time()
 
         duration = sig_off - sig_on 
@@ -175,8 +192,8 @@ class AutoParking:
 
     # 経路の長さを計算する
     def calculate_path(self, distance_to_mark, turned_theta):
-        path_x = distance_to_mark * np.cos(turned_theta)
-        path_y = distance_to_mark * np.sin(turned_theta)
+        path_x = distance_to_mark * np.cos(math.radians(turned_theta))
+        path_y = distance_to_mark * np.sin(math.radians(turned_theta))
         return path_x, path_y
 
 
@@ -186,19 +203,19 @@ class AutoParking:
         while(count!=0):
             if(count==1):
                 self.turn_right(turned_theta)    
-            if(self.can_move()==True):
-                count+=1
+                if(self.can_move()==True):
+                    count+=1
 
             elif(count==2):
-                self.move_forward(path_x)
-            if(self.can_move()==True):
-                count+=1
+                self.move_forward(int(path_x))
+                if(self.can_move()==True):
+                    count+=1
             elif(count==3):
                 self.turnleft(90)
-            if(self.can_move()==True):
-                count+=1            
+                if(self.can_move()==True):
+                    count+=1            
             elif(count==4):
-                self.move_forward(path_y)
+                self.move_forward(int(path_y))
                 count==0
         return True
 
@@ -208,6 +225,7 @@ class AutoParking:
 
 def main():
     moving_flag = False
+    turning_flag = False
     auto_parking = AutoParking()
     # カメラをセット
     cap = cv2.VideoCapture(0)
@@ -220,11 +238,48 @@ def main():
             ret, img = cap.read()
             if not ret:
                 continue
-            if auto_parking.can_move() and moving_flag == False:
-                moving_flag = True
-                auto_parking.move_forward(50)
-            else:
+
+            x = auto_parking.mark_detection(img)
+            
+            turned_theta = auto_parking.face_to_mark(x)
+            print("-----Test-----")
+            print(turned_theta)
+            # print("flag: ", movin)
+            print('-----Done------') 
+            if turned_theta == None:
                 pass
+            else:
+                print("-------break----------")
+                print("distance = ", auto_parking.get_distance())
+                distance = auto_parking.get_distance()
+                path_x, path_y = auto_parking.calculate_path(distance, turned_theta[1])
+                if auto_parking.can_move() and moving_flag == False:
+                    moving_flag = True
+                    auto_parking.move_to_mark(path_x, path_y, turned_theta)
+                else:
+                    pass
+                break
+                
+
+            
+
+            # if auto_parking.can_move() and moving_flag == False:
+            #     moving_flag = True
+                # moving_flag, turned_theta = auto_parking.face_to_mark(x)
+
+                # print("-----Test-----")
+                # print(turned_theta)
+                # print('-----Done------')
+                
+                
+                # distance_to_mark = get_distance()
+
+                # path_x, path_y = calculate_path(distance_to_mark, turned_theta)
+
+                # move_to_mark(path_x, path_y)
+                # auto_parking.move_forward(50)
+            # else:
+            #     pass
             out.write(img)
 
     except KeyboardInterrupt:
