@@ -255,7 +255,7 @@ def main():
             else:
                 print("distance = ", auto_parking.get_distance())
                 distance = auto_parking.get_distance()
-                distance = int(distance)
+                #distance = int(distance)
                 path_x, path_y = auto_parking.calculate_path(distance, turned_theta[1])
                 if auto_parking.can_move() and moving_flag == False:
                     print("------start moving-----")
