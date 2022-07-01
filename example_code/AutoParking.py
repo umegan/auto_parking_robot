@@ -202,19 +202,23 @@ class AutoParking:
         count=1
         while(count!=0):
             if(count==1):
+                print("test count1")
                 self.turn_right(turned_theta)    
                 if(self.can_move()==True):
                     count+=1
 
             elif(count==2):
+                print("test count2")
                 self.move_forward(int(path_x))
                 if(self.can_move()==True):
                     count+=1
             elif(count==3):
+                print("test count3")
                 self.turnleft(90)
                 if(self.can_move()==True):
                     count+=1            
             elif(count==4):
+                print("test count4")
                 self.move_forward(int(path_y))
                 count==0
         return True
