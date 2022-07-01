@@ -255,7 +255,7 @@ def main():
                 path_x, path_y = auto_parking.calculate_path(distance, turned_theta[1])
                 if auto_parking.can_move() and moving_flag == False:
                     moving_flag = True
-                    auto_parking.move_to_mark(path_x, path_y, turned_theta)
+                    auto_parking.move_to_mark(int(path_x), int(path_y), turned_theta)
                 else:
                     pass
                 break
