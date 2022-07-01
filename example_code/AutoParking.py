@@ -243,17 +243,17 @@ def main():
             
             turned_theta = auto_parking.face_to_mark(x)
             print("-----Test-----")
-            print(turned_theta)
+            print("theta = ",turned_theta)
             # print("flag: ", movin)
-            print('-----Done------') 
+
             if turned_theta == None:
                 pass
             else:
-                print("-------break----------")
                 print("distance = ", auto_parking.get_distance())
                 distance = auto_parking.get_distance()
                 path_x, path_y = auto_parking.calculate_path(distance, turned_theta[1])
                 if auto_parking.can_move() and moving_flag == False:
+                    print("------start moving-----")
                     moving_flag = True
                     auto_parking.move_to_mark(int(path_x), int(path_y), turned_theta)
                 else:
