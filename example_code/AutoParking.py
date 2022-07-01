@@ -259,7 +259,7 @@ def main():
                 if auto_parking.can_move() and moving_flag == False:
                     print("------start moving-----")
                     moving_flag = True
-                    auto_parking.move_to_mark(int(path_x), int(path_y), turned_theta)
+                    auto_parking.move_to_mark(int(path_x), int(path_y), int(turned_theta))
                 else:
                     pass
                 break
